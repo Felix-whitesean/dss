@@ -5,5 +5,5 @@
 @endsection
 
 @section('content')
-    @include('components.index')
+    @include('components.index_old')
 @endsection
