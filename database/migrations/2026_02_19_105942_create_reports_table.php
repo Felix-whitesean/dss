@@ -18,12 +18,13 @@ return new class extends Migration
 
             // Personal Info
             $table->string('fullname')->nullable();
-            $table->enum('gender', ['male', 'female', 'intersex', 'other'])->default('other');
+            $table->enum('gender', ['male', 'female', 'other'])->default('other');
             $table->string('age_range')->nullable();
 
             // Contact Info (Grouped logic in form)
             $table->string('phone_number')->nullable();
             $table->string('email_address')->nullable();
+            $table->string('guardian_phone_number')->nullable();
 
             // Identification
             $table->string('national_id')->nullable();
@@ -32,23 +33,15 @@ return new class extends Migration
             // Incident Details
             $table->string('tfgbv_type')->nullable();
             $table->string('platform_of_abuse')->nullable();
-            $table->string('platform_url')->nullable();
-            $table->date('incident_date')->nullable(); // Changed to date type
-            $table->time('incident_time')->nullable(); // Changed to time type
+            $table->string('new_platform_name')->nullable();
+            $table->string('evidence_url')->nullable();
             $table->text('description')->nullable();
 
             // Perpetrator Info
-            $table->string('perpetrator_name')->nullable();
-            $table->string('perpetrator_phone')->nullable();
-            $table->string('perpetrator_email')->nullable();
-            $table->string('perpetrator_age')->nullable();
             $table->string('relationship_with_perpetrator');
 
             // Location & Needs
-            $table->string('survivor_county')->nullable();
-            $table->string('survivor_subcounty')->nullable();
-            $table->string('survivor_ward')->nullable();
-            $table->text('specific_survivor_needs')->nullable();
+            $table->string('disability_status')->nullable();
 
             // Actions & Evidence
             $table->string('report_to_police')->nullable();

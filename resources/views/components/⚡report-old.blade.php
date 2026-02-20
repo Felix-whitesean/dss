@@ -2,6 +2,7 @@
 namespace App\Livewire;
 
 use App\Models\Report;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Attributes\Url;
 
@@ -14,23 +15,27 @@ new class extends Component {
     public $showPreview = false; // Controls the popup
     public $consent = false;
     public $casePassword = '';
+    public ?string $generatedCaseNumber = null;
+    public bool $submissionComplete = false;
 
     public $fieldList = [
         // Personal Page
-        ['label' => 'Full Name', 'name' => 'fullname', 'page' => 'Personal', 'group' => null, 'required' => true, 'type' => 'text'],
-        ['label' => 'Gender', 'name' => 'gender', 'page' => 'Personal', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['Male', 'Female', 'Intersex', 'Other']],
-        ['label' => "Range of Survivor's Age", 'name' => 'age_range', 'page' => 'Personal', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['Child (0-17)', 'Youth (18-35)', 'Adult (36-60)', 'Senior (60+)']],
+        ['label' => 'Full Name', 'name' => 'fullname', 'page' => 'Personal information', 'group' => null, 'required' => true, 'type' => 'text'],
+        ['label' => 'Gender', 'name' => 'gender', 'page' => 'Personal information', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['Male', 'Female', 'Prefer not to say']],
+        ['label' => 'National ID number', 'name' => 'national_id', 'page' => 'Personal information', 'group' => 'Identification', 'required' => true, 'type' => 'number'],
+        ['label' => 'Passport number', 'name' => 'passport_number', 'page' => 'Personal information', 'group' => 'Identification', 'required' => true, 'type' => 'number'],
+        ['label' => "Age", 'name' => 'age_range', 'page' => 'Personal information', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['Child (0-17)', 'Youth (18-35)', 'Adult (36-60)', 'Senior (60+)']],
 
         // Contact Page
-        ['label' => 'Phone', 'name' => 'phone_number', 'page' => 'Contact', 'group' => 'Communication', 'required' => true, 'type' => 'tel'],
-        ['label' => 'Email', 'name' => 'email_address', 'page' => 'Contact', 'group' => 'Communication', 'required' => true, 'type' => 'email'],
+        ['label' => 'Phone', 'name' => 'phone_number', 'page' => 'Personal information', 'group' => 'Contact', 'required' => true, 'type' => 'tel'],
+        ['label' => 'Email', 'name' => 'email_address', 'page' => 'Personal information', 'group' => 'Contact', 'required' => true, 'type' => 'email'],
+        ['label' => 'Guardian Phone Number', 'name' => 'guardian_phone_number', 'page' => 'Personal information', 'group' => 'Contact', 'required' => false, 'type' => 'tel', 'condition' => ['field' => 'age_range', 'value' => 'Child (0-17)']],
 
-        ['label' => 'National ID number', 'name' => 'national_id', 'page' => 'Contact', 'group' => 'Identification', 'required' => true, 'type' => 'number'],
-        ['label' => 'Passport number', 'name' => 'passport_number', 'page' => 'Contact', 'group' => 'Identification', 'required' => true, 'type' => 'number'],
+        ['label' => "Are you a person with disability?", 'name' => 'disability_status', 'page' => 'Personal information', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['yes', 'no']],
+
 
         // Incident Details Page
-        ['label' => 'Incident Description', 'name' => 'description', 'page' => 'Incident', 'group' => null, 'required' => false, 'type' => 'textarea'],
-        ['label' => 'TFGBV Type', 'name' => 'tfgbv_type', 'page' => 'Incident', 'group' => null, 'required' => true, 'type' => 'dropdown',
+        ['label' => 'Type of abuse', 'name' => 'tfgbv_type', 'page' => 'Incident', 'group' => null, 'required' => true, 'type' => 'dropdown',
             'options' => ['Hacking', 'Image-based abuse', 'Cyberstalking', 'Doxing', 'Online harassment'],
             'descriptions' => [
                 "Hacking" => "Unauthorized access to private accounts to monitor, control, or impersonate a survivor.",
@@ -40,13 +45,20 @@ new class extends Component {
                 "Online harassment" => "Abusive messages or trolling based on gender."
             ]
         ],
-        ['label' => 'Platform', 'name' => 'platform_of_abuse', 'page' => 'Incident', 'group' => null, 'required' => true, 'type' => 'text'],
+        ['label' => 'Incident Description', 'name' => 'description', 'page' => 'Incident', 'group' => null, 'required' => false, 'type' => 'textarea'],
+        ['label' => 'Platform where the abuse occurred', 'name' => 'platform_of_abuse', 'page' => 'Incident', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['twitter', 'instagram', 'facebook', 'other']],
+        ['label' => 'New platform name', 'name' => 'new_platform_name', 'page' => 'Incident', 'group' => null, 'required' => false, 'type' => 'text', 'condition' => ['field' => '', 'platform_of_abuse' => 'other']],
+
+
+        //Evidence section
+        ['label' => 'Evidence url', 'name' => 'evidence_link', 'page' => 'Evidence upload section', 'group' => 'Evidence', 'required' => false, 'type' => 'text'],
+        ['label' => 'Upload screenshot', 'name' => 'evidence_upload', 'page' => 'Evidence upload section', 'group' => 'Upload', 'required' => false, 'type' => 'file'],
 
         // Perpetrator & Needs Page
-        ['label' => 'Relationship with Perpetrator', 'name' => 'relationship_with_perpetrator', 'page' => 'Perpetrator', 'group' => null, 'required' => true, 'type' => 'text'],
-        ['label' => 'Specific Survivor Needs', 'name' => 'specific_survivor_needs', 'page' => 'Perpetrator', 'group' => null, 'required' => true, 'type' => 'textarea'],
-        ['label' => 'Report to Police', 'name' => 'report_to_police', 'page' => 'Perpetrator', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['Yes', 'No']],
-        ['label' => 'Recommend Counselling?', 'name' => 'recommend_counselling', 'page' => 'Perpetrator', 'group' => null, 'required' => true, 'type' => 'dropdown', 'options' => ['Yes', 'No']],
+        ['label' => 'Do you know the perpetrator?', 'name' => 'relationship_with_perpetrator', 'page' => 'Incident', 'group' => null, 'required' => false, 'type' => 'dropdown', 'options' => ['yes', 'no']],
+        ['label' => 'How do you want to be assisted?', 'name' => 'assistance', 'page' => 'Case management', 'group' => null, 'required' => false, 'type' => 'checkbox', 'options' => ['Report to police', 'Recommend counselling services']],
+//        ['label' => 'Consent', 'name' => 'consent', 'page' => 'Case management', 'group' => null, 'required' => true, 'type' => 'checkbox', 'options' => ['I consent to being contacted for follow up', 'I consent to my information being used for investigation purposes']],
+
     ];
 
     public function mount()
@@ -98,6 +110,29 @@ new class extends Component {
         $this->activePage = 'Personal';
     }
 
+    private function generateCaseNumber($type)
+    {
+        $yearSuffix = now()->format('y'); // e.g. '25'
+        $prefix = strtolower(substr(preg_replace('/\s+/', '', $type), 0, 3));
+
+        do {
+            // Generate 2 random uppercase letters
+            $letters = strtoupper(Str::random(2));
+            $letters = preg_replace('/[^A-Z]/', 'A', $letters); // ensure letters only
+
+            // Generate 3 random digits
+            $digits = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+
+            // Combine to form case number
+            $caseNumber = strtolower($prefix) . '-' . $yearSuffix . '-' . $letters . $digits;
+
+            // Check for uniqueness in DB
+            $exists = Report::where('case_number', $caseNumber)->exists();
+
+        } while ($exists);
+        return $caseNumber;
+    }
+
     public function submitFinal()
     {
         $this->validate([
@@ -106,25 +141,36 @@ new class extends Component {
         ]);
 
         try {
-            $caseNumber = 'REP-' . strtoupper(bin2hex(random_bytes(4)));
+            $caseNumber = $this->generateCaseNumber($this->formData['tfgbv_type']);
+
+//            $caseNumber = 'REP-' . strtoupper(bin2hex(random_bytes(4)));
 
             // Prepare the array
             $dataToSave = [
                 'case_number' => $caseNumber,
-                'password'    => $this->casePassword,
-                'fullname'    => $this->formData['fullname'] ?? 'Unknown',
-                'gender'      => strtolower($this->formData['gender'] ?? 'other'),
-                'survivor_age' => $this->formData['survivor_age'] ?? 'N/A',
-                'age_range'    => $this->formData['age_range'] ?? 'N/A',
-                'phone_number'  => $this->formData['phone_number'] ?? null,
+                'password' => $this->casePassword,
+                'fullname' => $this->formData['fullname'] ?? 'Unknown',
+                'gender' => strtolower($this->formData['gender'] ?? 'other'),
+                        //old_lacking
+                'national_id' => $this->formData['national_id'] ?? 'N/A',
+                'passport_number' => $this->formData['passport_number'] ?? 'N/A',
+                'age_range' => $this->formData['age_range'] ?? 'N/A',
+                'phone_number' => $this->formData['phone_number'] ?? null,
+
+                //new
+                'guardian_phone_number' => $this->formData['guardian_phone_number'] ?? null,
+                'new_platform_name' => $this->formData['new_platform_name'] ?? null,
+                'evidence_url' => $this->formData['evidence_url'] ?? null,
+                'evidence_of_abuse' => $this->formData['evidence_of_abuse'] ?? null,
+
                 'email_address' => $this->formData['email_address'] ?? null,
-                'tfgbv_type'        => $this->formData['tfgbv_type'] ?? 'N/A',
+                'tfgbv_type' => $this->formData['tfgbv_type'] ?? 'N/A',
                 'platform_of_abuse' => $this->formData['platform_of_abuse'] ?? 'N/A',
-                'description'       => $this->formData['description'] ?? null,
+                'description' => $this->formData['description'] ?? null,
                 'relationship_with_perpetrator' => $this->formData['relationship_with_perpetrator'] ?? 'Unknown',
-                'report_to_police'              => $this->formData['report_to_police'] ?? 'No',
-                'recommend_counselling'         => $this->formData['recommend_counselling'] ?? 'No',
-                'specific_survivor_needs' => $this->formData['specific_survivor_needs'] ?? 'None',
+                'report_to_police' => $this->formData['report_to_police'] ?? 'No',
+                'recommend_counselling' => $this->formData['recommend_counselling'] ?? 'No',
+                'disability_status' => $this->formData['disability_status'] ?? 'None',
             ];
 
             // TROUBLESHOOTING STEP: This will stop everything and show you the data in the browser.
@@ -132,15 +178,41 @@ new class extends Component {
 //            dd($dataToSave);
 
             Report::create($dataToSave);
+            $this->submissionComplete = true;
 
-            $this->showPreview = false;
+//            $this->showPreview = false;
             $this->formData = [];
+            $this->generatedCaseNumber = $caseNumber;
+            $this->activePage = $this->pages->first();
             session()->flash('success', "Report submitted! Case Number: {$caseNumber}");
 
         } catch (\Exception $e) {
             session()->flash('error', "Database error: " . $e->getMessage());
         }
     }
+    public function resetForm()
+    {
+        // Reset all form inputs
+        $this->formData = [];
+
+        // Reset preview and submission states
+        $this->showPreview = false;
+        $this->submissionComplete = false;
+
+        // Reset generated case number
+        $this->generatedCaseNumber = null;
+
+        // Reset active page to the first page
+        $this->activePage = $this->pages->first();
+
+        // Reset consent checkbox and case password
+        $this->consent = false;
+        $this->casePassword = '';
+
+        // Optional: flash message or toast to notify user
+        session()->flash('success', 'Form has been reset. You can submit a new case.');
+    }
+
     public function finish()
     {
         $rules = [];
@@ -248,7 +320,8 @@ new class extends Component {
     <div class="flex flex-1 overflow-hidden sm:flex-col-reverse md:flex-row">
 
         <!-- Sidebar -->
-        <div class="w-[10%] p-4 min-h-0 overflow-y-auto sm:w-full md:w-[350px] max-w-[350px] border-r border-alt-background flex flex-col shrink-0">
+        <div
+            class="w-[10%] p-4 min-h-0 overflow-y-auto sm:w-full md:w-[350px] max-w-[350px] border-r border-alt-background flex flex-col shrink-0">
             <h3 class="font-semibold text-[1rem] mt-3 self-center">Report progress</h3>
             <hr>
             <div class="flex flex-col w-full" id="report-menu">
@@ -279,7 +352,7 @@ new class extends Component {
                                                 $isSatisfied = $groupItems->contains(fn($i) => !empty($formData[$i['name']]));
                                             @endphp
                                             <span
-                                                class="font-semibold {{ $isSatisfied ? 'text-green-600' : 'text-blue-500' }}">
+                                                class="text-sm {{ $isSatisfied ? 'text-green-600' : 'text-foreground' }}">
                                                 {{ $label }}
                                             </span>
                                             <span>{!! $isSatisfied ? '<span class="text-green-500">✔</span>' : '<span class="text-red-500 font-bold">*</span>' !!}</span>
@@ -288,7 +361,7 @@ new class extends Component {
                                         {{-- Regular Fields (Full Name, Gender, etc) --}}
                                         @php $isFilled = !empty($formData[$f['name']]); @endphp
                                         <span
-                                            class="text-sm {{ $isFilled ? 'text-green-600 font-bold' : 'text-gray-500' }}">
+                                            class="text-sm {{ $isFilled ? 'text-green-600 font-bold' : 'text-foregound' }}">
                                             {{ $f['label'] }}
                                         </span>
                                         <span>{!! $isFilled ? '<span class="text-green-500">✔</span>' : ($f['required'] ? '<span class="text-red-500 font-bold">*</span>' : '') !!}</span>
@@ -309,17 +382,18 @@ new class extends Component {
                     </a>
 
                     <div class="flex-1 overflow-y-auto">
+                        <h5 class="ml-4 font-semibold text-[1.2rem] w-full">Technology Facilitated Gender Based
+                            Violence(TFGBV)
+                        </h5>
                         <div class="px-8 w-full">
                             <img src="{{asset('/images/features-3.webp')}}"
                                  class="rounded-t-xl w-full h-auto max-h-[80px] object-cover"
                                  alt="Reporting property image">
                         </div>
                         <div class="mx-8 px-4 flex flex-col border border-t-0 border-alt-background">
-                            <h5 class="font-semibold text-[1.8rem] w-full">Technology Facilitated Gender Based
-                                Violence(TFGBV)
-                                <br>
-                                <span class="text-primary text-[1.4rem]">Incident Reporting system</span>
-                            </h5>
+
+                            <h5 class="text-primary text-[1.4rem]">Online Reporting form</h5>
+
                             <div class="pl-8 py-4 flex flex-col gap-4">
                                 <div class="doc-icon flex flex-row gap-3">
                                     <x-tni-doc class="w-5 h-5 text-blue-500"/>
@@ -333,14 +407,15 @@ new class extends Component {
                             </div>
                             <main class="flex-1 p-4 overflow-y-auto">
                                 <div class="max-w-2xl mx-auto flex flex-col gap-4">
-{{--                                    <h1 class="text-4xl font-extrabold text-gray-900 mb-10">{{ $activePage }}</h1>--}}
+                                    {{--                                    <h1 class="text-4xl font-extrabold text-gray-900 mb-10">{{ $activePage }}</h1>--}}
 
                                     <div class="space-y-8">
                                         @foreach($this->groupsForCurrentPage as $groupName => $fields)
                                             <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
                                                 @if($groupName !== 'ungrouped')
                                                     <div class="flex justify-between items-center mb-6">
-                                                        <span class="text-xs font-black text-gray-400 uppercase tracking-widest">{{ $groupName }}</span>
+                                                        <span
+                                                            class="text-xs font-black text-gray-400 uppercase tracking-widest">{{ $groupName }}</span>
                                                         <div class="flex bg-gray-100 p-1 rounded-lg">
                                                             @foreach($fields as $tabField)
                                                                 <button
@@ -365,8 +440,10 @@ new class extends Component {
                                     </div>
 
                                     @if ($errors->any())
-                                        <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-lg">
-                                            <p>There are missing required fields. Please check all pages before finishing.</p>
+                                        <div
+                                            class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-lg">
+                                            <p>There are missing required fields. Please check all pages before
+                                                finishing.</p>
                                             <ul class="mt-2 list-disc list-inside font-medium text-xs">
                                                 @foreach ($errors->all() as $error)
                                                     <li>{{ $error }}</li>
@@ -375,7 +452,8 @@ new class extends Component {
                                         </div>
                                     @endif
 
-                                    <footer class="mt-12 flex items-center justify-between pt-8 border-t border-gray-200">
+                                    <footer
+                                        class="mt-12 flex items-center justify-between pt-8 border-t border-gray-200">
                                         <button wire:click="goToPrevious"
                                                 @disabled($activePage === $this->pages->first())
                                                 class="font-bold text-gray-400 hover:text-gray-800 disabled:opacity-20 transition-colors">
@@ -397,36 +475,150 @@ new class extends Component {
                                 </div>
                             </main>
 
+{{--                            @if($showPreview)--}}
+{{--                                <div--}}
+{{--                                    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">--}}
+{{--                                    <div--}}
+{{--                                        class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-300">--}}
+{{--                                        <div class="p-8 overflow-y-auto">--}}
+{{--                                            <h2 class="text-3xl font-black mb-6">Final Submission</h2>--}}
+
+{{--                                            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100 mb-8">--}}
+{{--                                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">--}}
+{{--                                                    Data--}}
+{{--                                                    Summary</h3>--}}
+{{--                                                <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 mb-8">--}}
+{{--                                                    <div class="flex items-center gap-3 mb-2 text-amber-700">--}}
+{{--                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"--}}
+{{--                                                             fill="none"--}}
+{{--                                                             viewBox="0 0 24 24" stroke="currentColor">--}}
+{{--                                                            <path stroke-linecap="round" stroke-linejoin="round"--}}
+{{--                                                                  stroke-width="2"--}}
+{{--                                                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>--}}
+{{--                                                        </svg>--}}
+{{--                                                        <h4 class="font-black text-sm uppercase tracking-tight">Security--}}
+{{--                                                            & Liability--}}
+{{--                                                            Notice</h4>--}}
+{{--                                                    </div>--}}
+{{--                                                    <p class="text-xs text-amber-800 leading-relaxed font-medium">--}}
+{{--                                                        By submitting this case, you acknowledge that you are <strong>solely--}}
+{{--                                                            responsible</strong> for preserving your <strong>Case--}}
+{{--                                                            Number</strong> and--}}
+{{--                                                        <strong>Security Password</strong>. We do not store plain-text--}}
+{{--                                                        passwords. Loss of--}}
+{{--                                                        these credentials will result in the permanent inability to--}}
+{{--                                                        access or decrypt this--}}
+{{--                                                        information.--}}
+{{--                                                    </p>--}}
+{{--                                                </div>--}}
+{{--                                                <div class="grid grid-cols-1 gap-3">--}}
+{{--                                                    <h3 class="uppercase font-semibold text-[0.9rem]">preview</h3>--}}
+{{--                                                    @foreach($fieldList as $field)--}}
+{{--                                                        @if(!empty($formData[$field['name']]))--}}
+{{--                                                            <div--}}
+{{--                                                                class="flex justify-between text-sm py-2 border-b border-gray-100 last:border-0">--}}
+{{--                                                                <span class="text-gray-500">{{ $field['label'] }}</span>--}}
+{{--                                                                <span--}}
+{{--                                                                    class="font-bold text-gray-900">{{ $formData[$field['name']] }}</span>--}}
+{{--                                                            </div>--}}
+{{--                                                        @endif--}}
+{{--                                                    @endforeach--}}
+{{--                                                </div>--}}
+{{--                                            </div>--}}
+
+{{--                                            <div class="space-y-6">--}}
+{{--                                                <label--}}
+{{--                                                    class="flex items-start gap-3 p-4 bg-blue-50 rounded-xl cursor-pointer border border-blue-100">--}}
+{{--                                                    <input type="checkbox" wire:model.live="consent"--}}
+{{--                                                           class="mt-1 w-5 h-5 rounded text-blue-600">--}}
+{{--                                                    <span class="text-sm text-blue-900 leading-tight">I hereby verify that the information provided is accurate and I give consent for processing.</span>--}}
+{{--                                                </label>--}}
+
+{{--                                                <div>--}}
+{{--                                                    <label--}}
+{{--                                                        class="block text-xs font-black text-gray-400 uppercase mb-2">Security--}}
+{{--                                                        Verification</label>--}}
+{{--                                                    <input type="password" wire:model.blur="casePassword" min="5"--}}
+{{--                                                           placeholder="Set the case Password"--}}
+{{--                                                           class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-600 outline-none transition">--}}
+{{--                                                    @error('casePassword') <p--}}
+{{--                                                        class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror--}}
+{{--                                                </div>--}}
+{{--                                            </div>--}}
+{{--                                        </div>--}}
+
+{{--                                        <div class="p-8 bg-gray-50 border-t flex flex-col gap-3">--}}
+{{--                                            <button wire:click="submitFinal"--}}
+{{--                                                    wire:loading.attr="disabled"--}}
+{{--                                                    @disabled(!$consent)--}}
+{{--                                                    class="w-full py-4 bg-blue-600 text-white rounded-xl font-black shadow-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-3">--}}
+
+{{--                                                <span wire:loading.remove wire:target="submitFinal">--}}
+{{--                                                    CONFIRM SUBMISSION--}}
+{{--                                                </span>--}}
+
+{{--                                                <span wire:loading wire:target="submitFinal"--}}
+{{--                                                      class="flex items-center gap-2">--}}
+{{--                                                    <svg class="animate-spin h-5 w-5 text-white"--}}
+{{--                                                         xmlns="http://www.w3.org/2000/svg" fill="none"--}}
+{{--                                                         viewBox="0 0 24 24">--}}
+{{--                                                        <circle class="opacity-25" cx="12" cy="12" r="10"--}}
+{{--                                                                stroke="currentColor" stroke-width="4"></circle>--}}
+{{--                                                        <path class="opacity-75" fill="currentColor"--}}
+{{--                                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>--}}
+{{--                                                    </svg>--}}
+{{--                                                    PROCESSING...--}}
+{{--                                                </span>--}}
+{{--                                            </button>--}}
+{{--                                            <div class="flex gap-3">--}}
+{{--                                                <button wire:click="$set('showPreview', false)"--}}
+{{--                                                        class="flex-1 py-3 font-bold text-gray-500 hover:text-gray-800">--}}
+{{--                                                    Edit Data--}}
+{{--                                                </button>--}}
+{{--                                                <button wire:click="discard"--}}
+{{--                                                        class="flex-1 py-3 font-bold text-red-500 hover:text-red-700">--}}
+{{--                                                    Discard All--}}
+{{--                                                </button>--}}
+{{--                                            </div>--}}
+{{--                                        </div>--}}
+{{--                                    </div>--}}
+{{--                                </div>--}}
+{{--                            @endif--}}
                             @if($showPreview)
-                                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                                <div
+                                    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                                     <div
                                         class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-300">
+
+                                        {{-- ========================= --}}
+                                        {{-- PREVIEW CONTENT (summary & details) --}}
+                                        {{-- ========================= --}}
                                         <div class="p-8 overflow-y-auto">
                                             <h2 class="text-3xl font-black mb-6">Final Submission</h2>
 
                                             <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100 mb-8">
-                                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Data
-                                                    Summary</h3>
+                                                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">
+                                                    Data Summary
+                                                </h3>
                                                 <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 mb-8">
                                                     <div class="flex items-center gap-3 mb-2 text-amber-700">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
+                                                             fill="none"
                                                              viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  stroke-width="2"
                                                                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                                         </svg>
-                                                        <h4 class="font-black text-sm uppercase tracking-tight">Security & Liability
-                                                            Notice</h4>
+                                                        <h4 class="font-black text-sm uppercase tracking-tight">Security & Liability Notice</h4>
                                                     </div>
                                                     <p class="text-xs text-amber-800 leading-relaxed font-medium">
-                                                        By submitting this case, you acknowledge that you are <strong>solely
-                                                            responsible</strong> for preserving your <strong>Case Number</strong> and
-                                                        <strong>Security Password</strong>. We do not store plain-text passwords. Loss of
-                                                        these credentials will result in the permanent inability to access or decrypt this
-                                                        information.
+                                                        By submitting this case, you acknowledge that you are <strong>solely responsible</strong> for preserving your <strong>Case Number</strong> and <strong>Security Password</strong>. We do not store plain-text passwords. Loss of these credentials will result in the permanent inability to access or decrypt this information.
                                                     </p>
                                                 </div>
+
+                                                {{-- Preview Fields --}}
                                                 <div class="grid grid-cols-1 gap-3">
-                                                    <h3 class="uppercase font-semibold text-[0.9rem]">preview</h3>
+                                                    <h3 class="uppercase font-semibold text-[0.9rem]">Preview</h3>
                                                     @foreach($fieldList as $field)
                                                         @if(!empty($formData[$field['name']]))
                                                             <div
@@ -438,57 +630,94 @@ new class extends Component {
                                                     @endforeach
                                                 </div>
                                             </div>
-
-                                            <div class="space-y-6">
-                                                <label
-                                                    class="flex items-start gap-3 p-4 bg-blue-50 rounded-xl cursor-pointer border border-blue-100">
-                                                    <input type="checkbox" wire:model.live="consent"
-                                                           class="mt-1 w-5 h-5 rounded text-blue-600">
-                                                    <span class="text-sm text-blue-900 leading-tight">I hereby verify that the information provided is accurate and I give consent for processing.</span>
-                                                </label>
-
-                                                <div>
-                                                    <label class="block text-xs font-black text-gray-400 uppercase mb-2">Security
-                                                        Verification</label>
-                                                    <input type="password" wire:model.blur="casePassword" min="5"
-                                                           placeholder="Set the case Password"
-                                                           class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-blue-600 outline-none transition">
-                                                    @error('casePassword') <p
-                                                        class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
-                                                </div>
-                                            </div>
                                         </div>
 
-                                        <div class="p-8 bg-gray-50 border-t flex flex-col gap-3">
-                                            <button wire:click="submitFinal"
-                                                    wire:loading.attr="disabled"
-                                                    @disabled(!$consent)
-                                                    class="w-full py-4 bg-blue-600 text-white rounded-xl font-black shadow-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-3">
+                                        {{-- ========================= --}}
+                                        {{-- ACTION / CASE NUMBER SECTION --}}
+                                        {{-- ========================= --}}
+                                        <div class="p-8 bg-gray-50 border-t flex flex-col gap-6">
+                                            @if(!$submissionComplete)
+                                                {{-- Consent Checkbox --}}
+                                                <label class="flex items-start gap-3 p-4 bg-blue-50 rounded-xl cursor-pointer border border-blue-100">
+                                                    <input type="checkbox"
+                                                           wire:model.live="consent"
+                                                           class="mt-1 w-5 h-5 rounded text-blue-600">
+                                                    <span class="text-sm text-blue-900 leading-tight">
+                            I hereby verify that the information provided is accurate and I give consent for processing.
+                        </span>
+                                                </label>
 
-                                                <span wire:loading.remove wire:target="submitFinal">
-                                                    CONFIRM SUBMISSION
-                                                </span>
+                                                {{-- Password --}}
+                                                <div>
+                                                    <label class="block text-xs font-black text-gray-400 uppercase mb-2">Security Verification</label>
+                                                    <input type="password"
+                                                           wire:model.blur="casePassword"
+                                                           placeholder="Set the case password"
+                                                           class="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-xl focus:border-blue-600 outline-none transition">
+                                                    @error('casePassword')
+                                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p>
+                                                    @enderror
+                                                </div>
 
-                                                                    <span wire:loading wire:target="submitFinal" class="flex items-center gap-2">
-                                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    PROCESSING...
-                                                </span>
-                                            </button>
-                                            <div class="flex gap-3">
-                                                <button wire:click="$set('showPreview', false)"
-                                                        class="flex-1 py-3 font-bold text-gray-500 hover:text-gray-800">Edit Data
+                                                {{-- Confirm Button --}}
+                                                <button wire:click="submitFinal"
+                                                        wire:loading.attr="disabled"
+                                                        @disabled(!$consent)
+                                                        class="w-full py-4 bg-blue-600 text-white rounded-xl font-black shadow-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-3">
+                                                    <span wire:loading.remove wire:target="submitFinal">CONFIRM SUBMISSION</span>
+                                                    <span wire:loading wire:target="submitFinal">PROCESSING...</span>
                                                 </button>
-                                                <button wire:click="discard" class="flex-1 py-3 font-bold text-red-500 hover:text-red-700">
-                                                    Discard All
-                                                </button>
-                                            </div>
+
+                                                {{-- Edit / Discard --}}
+                                                <div class="flex gap-3">
+                                                    <button wire:click="$set('showPreview', false)"
+                                                            class="flex-1 py-3 font-bold text-gray-500 hover:text-gray-800">
+                                                        Edit Data
+                                                    </button>
+                                                    <button wire:click="discard"
+                                                            class="flex-1 py-3 font-bold text-red-500 hover:text-red-700">
+                                                        Discard All
+                                                    </button>
+                                                </div>
+                                            @else
+                                                {{-- SUCCESS VIEW --}}
+                                                <div class="text-center py-6">
+                                                    <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-green-100 rounded-full">
+                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                             class="h-8 w-8 text-green-600"
+                                                             fill="none"
+                                                             viewBox="0 0 24 24"
+                                                             stroke="currentColor">
+                                                            <path stroke-linecap="round"
+                                                                  stroke-linejoin="round"
+                                                                  stroke-width="2"
+                                                                  d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </div>
+
+                                                    <h3 class="text-xl font-black text-green-700 mb-3">Submission Successful</h3>
+                                                    <p class="text-sm text-gray-600 mb-4">Your report has been submitted successfully.</p>
+
+                                                    <div class="bg-white border border-green-300 rounded-xl p-5 mb-4">
+                                                        <p class="text-xs text-gray-500 uppercase mb-1">Case Number</p>
+                                                        <p class="text-xl font-black text-green-700 tracking-widest">{{ $generatedCaseNumber }}</p>
+                                                    </div>
+
+                                                    <p class="text-xs text-gray-600 mb-6">
+                                                        Please save this case number and your password securely.
+                                                    </p>
+
+                                                    <button wire:click="resetForm"
+                                                            class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">
+                                                        Submit Another Case
+                                                    </button>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                             @endif
+
                         </div>
                     </div>
                 </div>
@@ -497,46 +726,3 @@ new class extends Component {
 
     </div>
 </div>
-@script
-<script>
-    function renderPage(page) {
-
-        const container = document.getElementById('container');
-        if (!container) return;
-
-        const reportFields = [
-            { name: "name", label: "Full Name", type: "text", page: 1 },
-            { name: "phone", label: "Phone Number", type: "tel", page: 1 },
-
-            { name: "national_id", label: "National ID", type: "text", page: 2 },
-            { name: "passport", label: "Passport Number", type: "text", page: 2 },
-
-            { name: "age", label: "Age", type: "text", page: 3 },
-            { name: "gender", label: "Gender", type: "text", page: 3 },
-        ];
-
-        container.innerHTML = '';
-
-        const fields = reportFields.filter(f => f.page === page);
-
-        fields.forEach(field => {
-
-            const wrapper = document.createElement('div');
-            wrapper.className = 'mb-4 flex flex-col';
-
-            const label = document.createElement('label');
-            label.className = 'mb-1 font-medium';
-            label.textContent = field.label;
-
-            const input = document.createElement('input');
-            input.type = field.type;
-            input.className = 'border rounded p-2';
-
-            wrapper.appendChild(label);
-            wrapper.appendChild(input);
-
-            container.appendChild(wrapper);
-        });
-    }
-</script>
-@endscript

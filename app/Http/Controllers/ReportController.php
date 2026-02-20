@@ -12,7 +12,6 @@ class ReportController extends Controller
             // 2. Redirect if it's missing
             return redirect()->route('terms.show');
         }
-
         return view('layouts.report.index');
     }
 

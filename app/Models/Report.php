@@ -21,27 +21,20 @@ class Report extends Model
         'email_address',
         'national_id',
         'passport_number',
+        'guardian_phone_number',
 
         // Incident Details
         'tfgbv_type',
         'platform_of_abuse',
-        'platform_url', // Added to match migration
-        'incident_date',
-        'incident_time',
+        'new_platform_name',
+        'evidence_url', // Added to match migration
         'description',
 
         // Perpetrator Details
-        'perpetrator_name',
-        'perpetrator_phone',
-        'perpetrator_email',
-        'perpetrator_age',
         'relationship_with_perpetrator',
 
         // Geography & Specifics
-        'survivor_county',
-        'survivor_subcounty',
-        'survivor_ward',
-        'specific_survivor_needs',
+        'disability_status',
 
         // Outcomes & Evidence
         'report_to_police',
