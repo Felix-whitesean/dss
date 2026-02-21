@@ -11,7 +11,7 @@
     </style>
 </head>
 <body class="!important w-screen pt-0 h-screen bg-gray-200 m-0 p-0 relative">
-    <div class="flex flex-col mt-0 md:-mt-[62px] sm:-mt-[69px] min-h-0 h-full p-0 m-0 overflow-hidden">
+    <div class="flex flex-col sm:m-0 -mt-[62px] min-h-0 h-full p-0 m-0 overflow-hidden">
         <!-- Fixed Header -->
         <div class="">
             @include('components.home.header')

@@ -14,6 +14,6 @@ Route::get('/uploads', [UploadsController::class , 'index'])->name('uploads');
 Route::get('/terms', [TermsController::class, 'showTerms'])->name('terms.show');
 
 Route::post('/terms/accept', function () {
-    return redirect()->intended("/report?activePage=Personal+information")
+    return redirect()->intended("/report")
         ->withCookie(cookie('accepted_terms', true, 24 * 60));
 })->name('terms.accept');

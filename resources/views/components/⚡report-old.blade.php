@@ -8,7 +8,7 @@ use Livewire\Attributes\Url;
 
 new class extends Component {
     #[Url]
-    public $activePage = 'Personal';
+    public $activePage = 'Personal information';
 
     public $formData = [];
     public $activeGroupField = [];
@@ -310,7 +310,7 @@ new class extends Component {
 }
 ?>
 
-<div class="flex flex-col md:h-screen md:overflow-hidden sm:overflow-hidden overflow-auto">
+<div class="flex flex-col md:h-screen md:overflow-hidden sm:overflow-hidden overflow-auto sm:m-0 -mt-[62px]">
 
     <!-- Child A: Header (takes its own height) -->
     <div class="shrink-0">
