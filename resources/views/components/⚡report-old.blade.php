@@ -310,18 +310,16 @@ new class extends Component {
 }
 ?>
 
-<div class="flex flex-col h-screen overflow-hidden">
+<div class="flex flex-col md:h-screen md:overflow-hidden sm:overflow-hidden overflow-auto">
 
     <!-- Child A: Header (takes its own height) -->
     <div class="shrink-0">
         @include('components/home/header')
     </div>
 
-    <div class="flex flex-1 overflow-hidden sm:flex-col-reverse md:flex-row">
-
-        <!-- Sidebar -->
-        <div
-            class="w-[10%] p-4 min-h-0 overflow-y-auto sm:w-full md:w-[350px] max-w-[350px] border-r border-alt-background flex flex-col shrink-0">
+    <div class="flex flex-col-reverse md:flex-row flex-1 overflow-y-auto">
+        <!-- Sidebar: Full width on mobile/tablet, Fixed width on desktop (md/lg) -->
+        <div class="w-full sm:max-w-[350px] max-w-full p-4 min-h-0 overflow-y-auto border-r border-alt-background flex flex-col shrink-0">
             <h3 class="font-semibold text-[1rem] mt-3 self-center">Report progress</h3>
             <hr>
             <div class="flex flex-col w-full" id="report-menu">
@@ -373,9 +371,9 @@ new class extends Component {
                 @endforeach
             </div>
         </div>
-        <main class="flex-1 overflow-y-auto min-h-0 bg-gray-100">
-            <div class="p-8">
-                <div class="flex flex-col w-full h-full overflow-auto min-h-0">
+        <main class="flex-1 overflow-y-auto sm:h-auto min-h-0 bg-background">
+            <div class="sm:p-8 p-2">
+                <div class="flex flex-col w-full h-full overflow-y-auto min-h-0">
                     <a href="{{route('home')}}" class="flex flex-row gap-3 pb-8">
                         <x-sui-wrap-back class="h-5 w-5"/>
                         <span>Return to home</span>
@@ -385,12 +383,12 @@ new class extends Component {
                         <h5 class="ml-4 font-semibold text-[1.2rem] w-full">Technology Facilitated Gender Based
                             Violence(TFGBV)
                         </h5>
-                        <div class="px-8 w-full">
+                        <div class="sm:px-8 px-4 w-full">
                             <img src="{{asset('/images/features-3.webp')}}"
                                  class="rounded-t-xl w-full h-auto max-h-[80px] object-cover"
                                  alt="Reporting property image">
                         </div>
-                        <div class="mx-8 px-4 flex flex-col border border-t-0 border-alt-background">
+                        <div class="sm:mx-8 mx:4 px-4 flex flex-col border border-t-0 border-alt-background">
 
                             <h5 class="text-primary text-[1.4rem]">Online Reporting form</h5>
 
@@ -405,13 +403,13 @@ new class extends Component {
                                 </div>
 
                             </div>
-                            <main class="flex-1 p-4 overflow-y-auto">
-                                <div class="max-w-2xl mx-auto flex flex-col gap-4">
+                            <main class="flex-1 sm:p-4 p-0 overflow-y-auto">
+                                <div class="sm:max-w-2xl w-full sm:mx-auto mx-0 flex flex-col gap-4">
                                     {{--                                    <h1 class="text-4xl font-extrabold text-gray-900 mb-10">{{ $activePage }}</h1>--}}
 
                                     <div class="space-y-8">
                                         @foreach($this->groupsForCurrentPage as $groupName => $fields)
-                                            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+                                            <div class="bg-white sm:p-8 p-2 rounded-2xl shadow-sm border border-gray-200">
                                                 @if($groupName !== 'ungrouped')
                                                     <div class="flex justify-between items-center mb-6">
                                                         <span
