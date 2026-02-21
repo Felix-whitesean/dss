@@ -5,8 +5,10 @@ use App\Models\Report;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Attributes\Url;
+use Livewire\WithFileUploads;
 
 new class extends Component {
+    use WithFileUploads;
     #[Url]
     public $activePage = 'Personal information';
 
@@ -52,7 +54,7 @@ new class extends Component {
 
         //Evidence section
         ['label' => 'Evidence url', 'name' => 'evidence_link', 'page' => 'Evidence upload section', 'group' => 'Evidence', 'required' => false, 'type' => 'text'],
-        ['label' => 'Upload screenshot', 'name' => 'evidence_upload', 'page' => 'Evidence upload section', 'group' => 'Upload', 'required' => false, 'type' => 'file'],
+        ['label' => 'Upload screenshot', 'name' => 'evidence_of_abuse', 'page' => 'Evidence upload section', 'group' => 'Upload', 'required' => false, 'type' => 'file'],
 
         // Perpetrator & Needs Page
         ['label' => 'Do you know the perpetrator?', 'name' => 'relationship_with_perpetrator', 'page' => 'Incident', 'group' => null, 'required' => false, 'type' => 'dropdown', 'options' => ['yes', 'no']],
@@ -139,6 +141,28 @@ new class extends Component {
             'consent' => 'accepted',
             'casePassword' => 'required|min:4'
         ]);
+        foreach ($this->fieldList as $field) {
+            if (
+                $field['type'] === 'file' &&
+                isset($this->formData[$field['name']]) &&
+                $this->formData[$field['name']] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
+            ) {
+                $file = $this->formData[$field['name']];
+
+                // Create custom filename like before
+                $fileName = time() . '_' . $file->getClientOriginalName();
+
+                // Store in public/uploads
+                $path = $file->storeAs(
+                    'uploads',     // folder
+                    $fileName,     // filename
+                    'public'       // disk
+                );
+
+                // Save path in formData
+                $this->formData[$field['name']] = $path;
+            }
+        }
 
         try {
             $caseNumber = $this->generateCaseNumber($this->formData['tfgbv_type']);
@@ -172,10 +196,6 @@ new class extends Component {
                 'recommend_counselling' => $this->formData['recommend_counselling'] ?? 'No',
                 'disability_status' => $this->formData['disability_status'] ?? 'None',
             ];
-
-            // TROUBLESHOOTING STEP: This will stop everything and show you the data in the browser.
-            // Once you are happy with the data, comment out the line below.
-//            dd($dataToSave);
 
             Report::create($dataToSave);
             $this->submissionComplete = true;
@@ -705,10 +725,15 @@ new class extends Component {
                                                         Please save this case number and your password securely.
                                                     </p>
 
-                                                    <button wire:click="resetForm"
-                                                            class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">
-                                                        Submit Another Case
-                                                    </button>
+                                                    <div class="flex flex-row justify-between">
+                                                        <button wire:click="resetForm"
+                                                                class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">
+                                                            Submit Another Case
+                                                        </button>
+
+                                                        <a href="{{route('home')}}" class="px-6 py-3 border-1 border-transparent bg-alt-background text-primary rounded-xl font-bold hover:border-primary">Go to home</a>
+                                                    </div>
+
                                                 </div>
                                             @endif
                                         </div>

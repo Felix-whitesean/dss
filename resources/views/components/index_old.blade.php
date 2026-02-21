@@ -702,7 +702,7 @@
                 <div class="wwd-card__body">
                     <h3 class="wwd-card__title">Digital Safety and Awareness</h3>
                     <p class="wwd-card__desc">
-                        Strengthen digital safety for online users. To provide referral pathways for people experiencing people experiencing online abuse to relevant services that are within their reach...........................................................................
+                        Strengthen digital safety for online users. To provide referral pathways for people experiencing people experiencing online abuse to relevant services that are within their reach.
                     </p>
                 </div>
             </article>
@@ -736,13 +736,16 @@
             </article>
 
         </div><!-- /.wwd-grid -->
-
     </div><!-- /.wwd-inner -->
 
 </section>
 
-
-
+{{--Added reporting section--}}
+<section class="my-50 bg-green-300">
+    <a href="{{route('report')}}"  class="h-30 flex flex-col py-8 bg-primary">
+        <span style="align-self: center; width: fit-content; inset: auto; margin: auto; text-align:center; background:var(--red); color: white; padding: 20px; font-size: medium; font-weight: bold; border-radius: 5px; text-wrap: nowrap;">Click to here report abuse</span>
+    </a>
+</section>
 
 
 
@@ -783,6 +786,7 @@
             <p style="text-align: justify;">As digital spaces continue to grow, so do the risks of online harassment, cyberstalking, non-consensual sharing of intimate images, online exploitation, and other forms of digital abuse that disproportionately affect individuals of all genders. We are therefore a dedicated platform committed to raising awareness, preventing, and responding to Technology-Facilitated Gender-Based Violence (TFGBV).</p>
             <p></p>
             <p></p>
+        </div>
         </div>
 
     </div>
@@ -1523,33 +1527,3 @@
     counters.forEach(function (c) { obs.observe(c); });
   })();
 </script>
-
-<script>
-(function () {
-    /* ── Mobile drawer ── */
-    var toggle = document.getElementById('mobToggle');
-    var drawer = document.getElementById('mobDrawer');
-    var icon   = document.getElementById('mobIcon');
-    var MENU  = '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>';
-    var CLOSE = '<line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/>';
-
-    if (toggle && drawer) {
-        toggle.addEventListener('click', function () {
-            var open = drawer.classList.toggle('open');
-            toggle.setAttribute('aria-expanded', open);
-            icon.innerHTML = open ? CLOSE : MENU;
-        });
-    }
-
-    /* ── Quick Exit ── */
-    function quickExit() {
-        window.location.replace('https://www.google.com');
-    }
-
-    document.querySelectorAll('.btn-exit').forEach(function (b) {
-        b.addEventListener('click', quickExit);
-    });
-
-    /* Esc × 3 within 1s */
-    var n = 0, t;
-    document.addEventListener('keydown', f

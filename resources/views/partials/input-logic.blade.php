@@ -86,32 +86,32 @@
             <textarea wire:model.blur="formData.{{ $field['name'] }}" rows="4"
                       class="w-full px-4 py-3 bg-gray-50 border-2 rounded-xl border-gray-200 focus:border-blue-500"></textarea>
         {{--        --}}
-{{--        @elseif($field['type'] === 'file')--}}
+        @elseif($field['type'] === 'file')
 
-{{--            <div class="relative">--}}
+            <div class="relative">
 
-{{--                <input type="file"--}}
-{{--                       wire:model="formData.{{ $field['name'] }}"--}}
-{{--                       @if(isset($field['accept'])) accept="{{ $field['accept'] }}" @endif--}}
-{{--                       class="w-full px-4 py-3 bg-gray-50 border-2 rounded-xl border-gray-200 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition">--}}
+                <input type="file"
+                       wire:model="formData.{{ $field['name'] }}"
+                       @if(isset($field['accept'])) accept="{{ $field['accept'] }}" @endif
+                       class="w-full px-4 py-3 bg-gray-50 border-2 rounded-xl border-gray-200 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition">
 
-{{--                --}}{{-- Loading Indicator --}}
-{{--                <div wire:loading wire:target="formData.{{ $field['name'] }}"--}}
-{{--                     class="text-xs text-blue-600 mt-2 font-bold">--}}
-{{--                    Uploading...--}}
-{{--                </div>--}}
+                 Loading Indicator
+                <div wire:loading wire:target="formData.{{ $field['name'] }}"
+                     class="text-xs text-blue-600 mt-2 font-bold">
+                    Uploading...
+                </div>
 
-{{--                --}}{{-- Image Preview --}}
-{{--                @if(isset($formData[$field['name']]) && is_object($formData[$field['name']]))--}}
-{{--                    @if(str_starts_with($formData[$field['name']]->getMimeType(), 'image/'))--}}
-{{--                        <div class="mt-3">--}}
-{{--                            <img src="{{ $formData[$field['name']]->temporaryUrl() }}"--}}
-{{--                                 class="w-40 rounded-xl shadow-md">--}}
-{{--                        </div>--}}
-{{--                    @endif--}}
-{{--                @endif--}}
+                 Image Preview
+                @if(isset($formData[$field['name']]) && is_object($formData[$field['name']]))
+                    @if(str_starts_with($formData[$field['name']]->getMimeType(), 'image/'))
+                        <div class="mt-3">
+                            <img src="{{ $formData[$field['name']]->temporaryUrl() }}"
+                                 class="w-40 rounded-xl shadow-md">
+                        </div>
+                    @endif
+                @endif
 
-{{--            </div>--}}
+            </div>
         @else
             {{-- Existing Text Input Logic --}}
             <input type="{{$field['type'] ?? 'text'}}" wire:model.blur="formData.{{ $field['name'] }}"
