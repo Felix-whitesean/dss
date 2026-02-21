@@ -5,7 +5,7 @@
     </div>
     <div class="topbar-inner">
 
-        <a class="brand" href="{{route('home')}}" aria-label="Ministry of Gender, Culture and Children Services – Home">
+        <a class="brand max-w-[80%]" href="{{route('home')}}" aria-label="Ministry of Gender, Culture and Children Services – Home">
 
             <img class="logo-img"
                  src="{{asset('/images/logo_full.png')}}"
